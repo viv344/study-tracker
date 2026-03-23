@@ -26,15 +26,26 @@ MESSAGES=(
 
 NUM_COMMITS=$(( RANDOM % 5 + 1 ))
 
+# ~30% chance of applying a feature patch on any given day
+APPLY_PATCH=$(( RANDOM % 10 ))
+if [ $APPLY_PATCH -lt 3 ]; then
+  PATCH_MSG=$(python3 apply_patch.py 2>&1)
+  EXIT=$?
+  if [ $EXIT -eq 0 ] && [ -n "$PATCH_MSG" ]; then
+    git add index.html patch_idx.txt
+    git commit -m "$PATCH_MSG"
+    sleep $(( RANDOM % 60 + 30 ))
+    NUM_COMMITS=$(( NUM_COMMITS - 1 ))  # one commit already done
+  fi
+fi
+
 for i in $(seq 1 $NUM_COMMITS); do
-  # Append a small invisible change to activity.log
   echo "$(date '+%Y-%m-%d %H:%M:%S') session-$i" >> activity.log
 
   MSG="${MESSAGES[$RANDOM % ${#MESSAGES[@]}]}"
   git add activity.log
   git commit -m "$MSG"
 
-  # Small random sleep between commits (30-120s) so timestamps differ
   sleep $(( RANDOM % 90 + 30 ))
 done
 
