@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Tracker</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f172a;
+  --surface:  #1e293b;
+  --surface2: #293548;
+  --border:   #334155;
+  --text:     #f1f5f9;
+  --muted:    #94a3b8;
+  --accent:   #6366f1;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --radius:   12px;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Header ─────────────────────────────────────── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  gap: 1rem;
+}
+.header-left { display: flex; align-items: center; gap: 0.75rem; }
+.header h1   { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+.pill {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.orange { background: #ea580c; }
+.pill.green  { background: var(--green); }
+
+/* ── Tabs ────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.25rem;
+}
+.tab {
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab:hover  { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Main content ───────────────────────────────── */
+.main {
+  padding: 1.5rem;
+  max-width: 1050px;
+  margin: 0 auto;
+}
+
+/* ── Cards ───────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+/* ── Block cards (Today) ─────────────────────────── */
+.block-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.block-card + .block-card { }
+.block-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.9rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.block-name { font-weight: 700; font-size: 1rem; }
+.block-time { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+.subj-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+.subj-chip:hover { opacity: 0.8; }
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+.timer-val {
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.timer-val.running { color: var(--green); }
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn:hover  { opacity: 0.85; }
+.btn-green  { background: var(--green); color: #fff; }
+.btn-red    { background: var(--red);   color: #fff; }
+.btn-ghost  { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-primary{ background: var(--accent); color: #fff; }
+.btn-sm     { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+
+/* ── Notes ───────────────────────────────────────── */
+.notes-area {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  color: var(--text);
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 64px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+.notes-area::placeholder { color: var(--muted); }
+.notes-area:focus { outline: none; border-color: var(--accent); }
+.notes-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.35rem; display: block; }
+
+/* ── Week grid ───────────────────────────────────── */
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.week-label { font-weight: 600; font-size: 1rem; flex: 1; }
+
+.week-scroll { overflow-x: auto; }
+.week-grid {
+  display: grid;
+  grid-template-columns: 72px repeat(7, 1fr);
+  gap: 4px;
+  min-width: 580px;
+}
+.wg-corner {}
+.wg-day-hdr {
+  text-align: center;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-radius: 6px;
+}
+.wg-day-hdr.today-col {
+  background: var(--surface2);
+  color: var(--text);
+}
+.wg-block-lbl {
+  display: flex;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding-right: 0.4rem;
+  line-height: 1.2;
+}
+.wg-cell {
+  border-radius: 8px;
+  padding: 0.45rem 0.5rem;
+  min-height: 68px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.1s, border-color 0.1s;
+  position: relative;
+}
+.wg-cell:hover { transform: scale(1.03); border-color: rgba(255,255,255,0.3); }
+.wg-cell.today-cell { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 1px; }
+.wg-cell.empty-cell { background: var(--surface); cursor: default; }
+.wg-cell.empty-cell:hover { transform: none; border-color: transparent; }
+.wg-code { font-size: 0.8rem; font-weight: 700; }
+.wg-time-logged { font-size: 0.65rem; opacity: 0.75; margin-top: 3px; }
+.wg-notes-dot   { font-size: 0.65rem; margin-top: 2px; opacity: 0.6; }
+.wg-running-dot {
+  position: absolute;
+  top: 4px; right: 5px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* ── Stats ───────────────────────────────────────── */
+.stat-item { margin-bottom: 1.15rem; }
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.stat-name { font-size: 0.88rem; }
+.stat-nums { font-size: 0.8rem; color: var(--muted); }
+.prog-track {
+  height: 9px;
+  background: var(--surface2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s;
+}
+
+/* ── Legend ──────────────────────────────────────── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
+}
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ── Modal ───────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; }
+.modal-sub   { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
+.subj-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin-bottom: 0.35rem;
+  transition: background 0.12s;
+}
+.subj-option:hover   { background: var(--surface2); }
+.subj-option.active  { border-color: rgba(255,255,255,0.25); background: var(--surface2); }
+.subj-option-code    { font-weight: 700; font-size: 0.88rem; min-width: 32px; }
+.subj-option-name    { font-size: 0.83rem; color: var(--muted); }
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+/* ── Info banner ─────────────────────────────────── */
+.banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+}
+.banner h2 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+.banner p  { color: var(--muted); font-size: 0.9rem; }
+
+select.subj-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="header">
+    <div class="header-left">
+      <h1>Study Tracker</h1>
+      <span id="exam-pill" class="pill"></span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" onclick="switchTab('today')">Today</button>
+      <button class="tab"        onclick="switchTab('week')">Week</button>
+      <button class="tab"        onclick="switchTab('stats')">Stats</button>
+    </nav>
+  </header>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════════
+const HOLIDAY_START = '2026-03-16';
+const HOLIDAY_END   = '2026-04-26';
+const TERM_START    = '2026-04-27';
+const REVISION_END  = '2026-05-31';
+const EXAM_START    = '2026-06-01';
+
+const SUBJECTS = {
+  B2:  { name: 'Engineering in Society', color: '#818cf8', weight: 1.5, modules: [
+    'Project Management', 'Technology Strategy', 'Project Financing',
+    'Engineering, Sustainability & Environment', 'Safety and Risk 1', 'Safety and Risk 2', 'Ethics',
+  ]},
+  B3:  { name: 'Group Project',          color: '#34d399', weight: 0, holidayOnly: true, modules: [] },
+  B13: { name: 'Circuits & Comms',       color: '#fbbf24', weight: 1, modules: [
+    'ADC 1', 'ADC 2', 'Communications 1', 'Communications 2',
+  ]},
+  B14: { name: 'Info Engineering',       color: '#a78bfa', weight: 1, modules: [
+    'Image Processing', 'Signal Processing', 'Estimation', 'Inference',
+  ]},
+  B15: { name: 'Control Systems',        color: '#f87171', weight: 1, modules: [
+    'Linear Dynamic Systems', 'Optimal Control', 'Kalman Filters', 'Controller Performance',
+  ]},
+  B16: { name: 'Software Engineering',   color: '#38bdf8', weight: 1, modules: [
+    'Software Design in C++ 1', 'Software Design in C++ 2',
+    'Algorithms and Data Structures 1', 'Algorithms and Data Structures 2',
+  ]},
+  B20: { name: 'Machine Learning',       color: '#f472b6', weight: 1, modules: [
+    'Discriminative Learning 1', 'Discriminative Learning 2', 'Generative Learning 1', 'Generative Learning 2',
+  ]},
+};
+
+// Simple day-by-day subject cycle: 1 subject per day, 2 sessions each
+const DAY_CYCLE = ['B13','B14','B15','B16','B20','B2'];
+
+const BLOCK_DEFS = [
+  { id: 'session1', label: 'Session 1', time: '09:00 – 13:00' },
+  { id: 'session2', label: 'Session 2', time: '14:00 – 18:00' },
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let tab      = 'today';
+let weekBase = todayStr();   // any date in the viewed week
+let data     = loadData();
+let modal    = null;         // { ds, blockId }
+
+// ════════════════════════════════════════════════════════════
+// DATE UTILS
+// ════════════════════════════════════════════════════════════
+function localStr(d) {
+  // Use local date components — toISOString() is UTC and breaks on BST/DST boundaries
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function todayStr() {
+  return localStr(new Date());
+}
+function parseDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function fmtDate(d) {
+  return localStr(d);
+}
+function isWeekend(s) {
+  const day = parseDate(s).getDay();
+  return day === 0 || day === 6;
+}
+function inHoliday(s)  { return s >= HOLIDAY_START && s <= HOLIDAY_END; }
+function inStudy(s)    { return s >= HOLIDAY_START && s <= REVISION_END; }
+
+function isRestDay(ds) {
+  return data.schedule[ds]?._rest === true;
+}
+function blocksForDate(s) {
+  if (!inStudy(s))  return [];
+  if (isRestDay(s)) return [];
+  return BLOCK_DEFS;
+}
+
+function weekMonday(s) {
+  const d = parseDate(s);
+  const dow = d.getDay(); // 0=Sun
+  const offset = dow === 0 ? -6 : 1 - dow;
+  const m = new Date(d);
+  m.setDate(d.getDate() + offset);
+  return m;
+}
+
+function daysUntil(s) {
+  const now  = parseDate(todayStr());
+  const then = parseDate(s);
+  return Math.ceil((then - now) / 86400000);
+}
+
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+function newEntry(subject) {
+  return { subject, notes: '', timeMs: 0, running: false, startTime: null };
+}
+
+function generateSchedule() {
+  const sched    = {};
+  const start    = parseDate(HOLIDAY_START);
+  const end      = parseDate(REVISION_END);
+  let calIdx     = 0;
+  let studyIdx   = 0;
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const ds = fmtDate(d);
+
+    // One rest day every 14 calendar days
+    if (calIdx % 14 === 13) {
+      sched[ds] = { _rest: true };
+      calIdx++;
+      continue;
+    }
+
+    const subj = DAY_CYCLE[studyIdx % DAY_CYCLE.length];
+    sched[ds] = {};
+    for (const blk of BLOCK_DEFS) {
+      sched[ds][blk.id] = newEntry(subj);
+    }
+
+    studyIdx++;
+    calIdx++;
+  }
+  return sched;
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('studytracker_v8');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { schedule: generateSchedule() };
+}
+
+function save() {
+  localStorage.setItem('studytracker_v8', JSON.stringify(data));
+}
+
+function getEntry(ds, bid) {
+  return data.schedule[ds]?.[bid] ?? null;
+}
+
+// ════════════════════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════════════════════
+function elapsedMs(e) {
+  if (!e) return 0;
+  let ms = e.timeMs || 0;
+  if (e.running && e.startTime) ms += Date.now() - e.startTime;
+  return ms;
+}
+
+function fmtMs(ms) {
+  if (!ms || ms < 1000) return '0m 0s';
+  const s   = Math.floor(ms / 1000);
+  const h   = Math.floor(s / 3600);
+  const min = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${min}m`;
+  return `${min}m ${sec}s`;
+}
+
+function fmtHours(ms) {
+  if (!ms || ms < 60000) return '0m';
+  const h = ms / 3600000;
+  return h >= 1 ? `${h.toFixed(1)}h` : `${Math.round(ms/60000)}m`;
+}
+
+function stopAll() {
+  Object.values(data.schedule).forEach(day => {
+    Object.values(day).forEach(e => {
+      if (e.running) {
+        e.timeMs  += Date.now() - e.startTime;
+        e.running  = false;
+        e.startTime= null;
+      }
+    });
+  });
+}
+
+function doStartTimer(ds, bid) {
+  const e = getEntry(ds, bid);
+  if (!e || e.running) return;
+  stopAll();
+  e.running   = true;
+  e.startTime = Date.now();
+  save();
+  render();
+}
+
+function doStopTimer(ds, bid) {
+  const e = getEntry(ds, bid);
+  if (!e || !e.running) return;
+  e.timeMs  += Date.now() - e.startTime;
+  e.running  = false;
+  e.startTime= null;
+  save();
+  render();
+}
+
+function doSaveNotes(ds, bid, text) {
+  const e = getEntry(ds, bid);
+  if (!e) return;
+  e.notes = text;
+  save();
+}
+
+function doSetSubject(ds, bid, subj) {
+  if (!data.schedule[ds]) return;
+  if (!data.schedule[ds][bid]) data.schedule[ds][bid] = newEntry(subj);
+  else data.schedule[ds][bid].subject = subj;
+  save();
+}
+
+// ════════════════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════════════════
+function computeStats() {
+  const ms   = {};
+  const blks = {};
+  Object.keys(SUBJECTS).forEach(k => { ms[k] = 0; blks[k] = 0; });
+  Object.values(data.schedule).forEach(day => {
+    Object.values(day).forEach(e => {
+      if (e && SUBJECTS[e.subject]) {
+        ms[e.subject]   += elapsedMs(e);
+        blks[e.subject] += 1;
+      }
+    });
+  });
+  return { ms, blks };
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE ASSIGNMENT
+// ════════════════════════════════════════════════════════════
+function getModuleFor(ds, bid) {
+  const subj = getEntry(ds, bid)?.subject;
+  if (!subj) return null;
+  const mods = SUBJECTS[subj]?.modules;
+  if (!mods || !mods.length) return null;
+  // Count how many times this subject has appeared in any block before this one
+  const sortedDates = Object.keys(data.schedule).sort();
+  let count = 0;
+  for (const d of sortedDates) {
+    const day = data.schedule[d];
+    if (!day || day._rest) continue;
+    for (const blk of BLOCK_DEFS) {
+      if (d === ds && blk.id === bid) return mods[Math.floor(count / 2) % mods.length];
+      const e = day[blk.id];
+      if (e?.subject === subj) count++;
+    }
+  }
+  return mods[Math.floor(count / 2) % mods.length];
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER HELPERS
+// ════════════════════════════════════════════════════════════
+function subjChip(code, ds, bid, small = false) {
+  const s = SUBJECTS[code] || {};
+  const sz = small ? 'font-size:0.75rem;padding:0.2rem 0.6rem' : '';
+  return `<button class="subj-chip" style="background:${s.color}20;color:${s.color};${sz}"
+    onclick="openModal('${ds}','${bid}')">
+    <span class="dot" style="background:${s.color}"></span>${code}
+  </button>`;
+}
+
+function timerHTML(ds, bid, e, inline) {
+  const ms  = elapsedMs(e);
+  const run = e && e.running;
+  const id  = `tv-${ds}-${bid}`;
+  if (inline) {
+    return `<span id="${id}" class="timer-val ${run?'running':''}">${fmtMs(ms)}</span>`;
+  }
+  return `
+    <div class="timer-row">
+      <span id="${id}" class="timer-val ${run?'running':''}">${fmtMs(ms)}</span>
+      ${!run
+        ? `<button class="btn btn-green" onclick="startTimer('${ds}','${bid}')">▶ Start</button>`
+        : `<button class="btn btn-red"   onclick="stopTimer('${ds}','${bid}')">⏹ Stop</button>`
+      }
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// TODAY VIEW
+// ════════════════════════════════════════════════════════════
+function renderToday() {
+  const today  = todayStr();
+  const blocks = blocksForDate(today);
+  const label  = parseDate(today).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  if (inStudy(today) && isRestDay(today)) {
+    return `<div class="banner">
+      <h2 style="font-size:2rem">😴</h2>
+      <h2>Rest day</h2>
+      <p>${label}</p>
+      <p style="margin-top:0.4rem;color:var(--muted)">No blocks today — recharge and come back tomorrow.</p>
+    </div>`;
+  }
+
+  if (!inStudy(today)) {
+    const dh = daysUntil(HOLIDAY_START);
+    if (dh > 0) {
+      return `<div class="banner">
+        <h2>Holidays start in ${dh} day${dh>1?'s':''}!</h2>
+        <p>${label}</p>
+        <p style="margin-top:0.5rem">First study day: ${HOLIDAY_START}</p>
+      </div>`;
+    }
+    return `<div class="banner">
+      <h2>Study period is over — good luck in the exams!</h2>
+      <p>${label}</p>
+    </div>`;
+  }
+
+  const termBadge = today === TERM_START
+    ? `<span style="background:#f59e0b;color:#000;font-size:0.75rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:999px;margin-left:0.75rem">Term starts today</span>`
+    : '';
+  let html = `<div style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem">${label}${termBadge}</div>`;
+
+  for (const blk of blocks) {
+    const e    = getEntry(today, blk.id) || newEntry('B14');
+    const s    = SUBJECTS[e.subject] || {};
+    const color= s.color || '#6b7280';
+    const mod  = getModuleFor(today, blk.id);
+    html += `
+      <div class="block-card" style="border-left-color:${color}">
+        <div class="block-top">
+          <div>
+            <div class="block-name">${blk.label}</div>
+            <div class="block-time">${blk.time}</div>
+            ${mod ? `<div style="margin-top:4px;font-size:0.8rem;font-weight:600;color:${color}">${mod}</div>` : ''}
+          </div>
+          ${subjChip(e.subject, today, blk.id)}
+        </div>
+        ${timerHTML(today, blk.id, e, false)}
+        <label class="notes-label">Notes</label>
+        <textarea class="notes-area" placeholder="What did you cover?"
+          onblur="saveNotes('${today}','${blk.id}',this.value)"
+          onchange="saveNotes('${today}','${blk.id}',this.value)">${e.notes||''}</textarea>
+      </div>`;
+  }
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// WEEK VIEW
+// ════════════════════════════════════════════════════════════
+function renderWeek() {
+  const mon  = weekMonday(weekBase);
+  const days = Array.from({length:7}, (_,i) => {
+    const d = new Date(mon); d.setDate(mon.getDate()+i); return d;
+  });
+  const today= todayStr();
+
+  const rangeLabel = `${mon.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${
+    days[6].toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+
+  // Legend
+  let legend = '<div class="legend">';
+  for (const [code, s] of Object.entries(SUBJECTS)) {
+    legend += `<span class="legend-chip" style="background:${s.color}18;color:${s.color}">
+      <span class="dot" style="background:${s.color}"></span>${code}
+    </span>`;
+  }
+  legend += '</div>';
+
+  // Nav
+  let html = `
+    <div class="week-nav">
+      <button class="btn btn-ghost btn-sm" onclick="weekNav(-1)">◀ Prev</button>
+      <span class="week-label">${rangeLabel}</span>
+      <button class="btn btn-ghost btn-sm" onclick="weekNav(1)">Next ▶</button>
+      <button class="btn btn-ghost btn-sm" onclick="weekGoToday()">Today</button>
+    </div>
+    ${legend}
+    <div class="week-scroll"><div class="week-grid">`;
+
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  // Header row
+  html += `<div class="wg-corner"></div>`;
+  days.forEach((d,i) => {
+    const ds       = fmtDate(d);
+    const isTd     = ds === today;
+    const isTerm   = ds === TERM_START;
+    const isExam   = ds === EXAM_START;
+    let badge = '';
+    if (isTerm) badge = `<div style="font-size:0.6rem;background:#f59e0b;color:#000;border-radius:3px;padding:1px 3px;margin-top:2px;font-weight:700">TERM</div>`;
+    if (isExam) badge = `<div style="font-size:0.6rem;background:#ef4444;color:#fff;border-radius:3px;padding:1px 3px;margin-top:2px;font-weight:700">EXAMS</div>`;
+    html += `<div class="wg-day-hdr ${isTd?'today-col':''}" ${isTerm?'style="color:var(--text)"':''}>
+      ${dayNames[i]}<br><small>${d.getDate()}</small>${badge}
+    </div>`;
+  });
+
+  // Block rows
+  for (const blk of BLOCK_DEFS) {
+    html += `<div class="wg-block-lbl">${blk.label}</div>`;
+    for (const d of days) {
+      const ds    = fmtDate(d);
+
+      // Rest day: show indicator only on morning row, blank on others
+      if (inStudy(ds) && isRestDay(ds)) {
+        if (blk.id === 'morning') {
+          html += `<div class="wg-cell" style="background:var(--surface2);border-color:var(--border);
+            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <span style="font-size:1.1rem">😴</span>
+            <span style="font-size:0.65rem;color:var(--muted)">rest</span>
+          </div>`;
+        } else {
+          html += `<div class="wg-cell empty-cell" style="background:var(--surface2);opacity:0.4"></div>`;
+        }
+        continue;
+      }
+
+      const avail = blocksForDate(ds).find(b => b.id === blk.id);
+      if (!avail) {
+        html += `<div class="wg-cell empty-cell"></div>`;
+        continue;
+      }
+      const e     = getEntry(ds, blk.id) || {};
+      const s     = SUBJECTS[e.subject]  || {};
+      const color = s.color || '#6b7280';
+      const ms    = elapsedMs(e);
+      const isTd  = ds === today;
+      html += `<div class="wg-cell ${isTd?'today-cell':''}"
+          style="background:${color}18;border-color:${color}35"
+          onclick="openModal('${ds}','${blk.id}')">
+        ${e.running ? `<div class="wg-running-dot"></div>` : ''}
+        <div class="wg-code" style="color:${color}">${e.subject||'?'}</div>
+        ${ms>0 ? `<div class="wg-time-logged" style="color:${color}">${fmtMs(ms)}</div>` : ''}
+        ${e.notes ? `<div class="wg-notes-dot">📝</div>` : ''}
+      </div>`;
+    }
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// STATS VIEW
+// ════════════════════════════════════════════════════════════
+function renderStats() {
+  const { ms, blks } = computeStats();
+  const msPerBlock   = 3 * 3600 * 1000; // 3h target per block
+
+  let html = `<div style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem">Subject Progress</div>`;
+
+  for (const [code, s] of Object.entries(SUBJECTS)) {
+    const logged = ms[code]   || 0;
+    const target = (blks[code]||0) * msPerBlock;
+    const pct    = target > 0 ? Math.min(100, (logged/target)*100) : 0;
+    html += `
+      <div class="stat-item">
+        <div class="stat-header">
+          <div class="stat-name">
+            <span style="display:inline-block;background:${s.color}20;color:${s.color};
+              padding:0.1rem 0.5rem;border-radius:4px;font-weight:700;font-size:0.8rem;
+              margin-right:0.4rem">${code}</span>
+            <span style="color:var(--muted);font-size:0.85rem">${s.name}</span>
+          </div>
+          <div class="stat-nums">
+            ${fmtHours(logged)} / ${blks[code]||0} blocks
+          </div>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:${pct}%;background:${s.color}"></div>
+        </div>
+      </div>`;
+  }
+
+  const totalMs = Object.values(ms).reduce((a,b)=>a+b,0);
+  html += `
+    <div class="card" style="margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+      <span>Total time logged: <strong>${fmtHours(totalMs)}</strong></span>
+      <button class="btn btn-ghost btn-sm" onclick="resetData()">Reset all data</button>
+    </div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// BLOCK MODAL (subject picker + notes + timer)
+// ════════════════════════════════════════════════════════════
+function openModal(ds, bid) {
+  modal = { ds, bid };
+  renderModal();
+}
+
+function renderModal() {
+  const existing = document.getElementById('overlay');
+  if (existing) existing.remove();
+
+  const { ds, bid } = modal;
+  const blk   = BLOCK_DEFS.find(b => b.id === bid);
+  const e     = getEntry(ds, bid) || newEntry('B14');
+  const d     = parseDate(ds);
+  const label = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  const isToday = ds === todayStr();
+
+  let subjectList = '';
+  for (const [code, s] of Object.entries(SUBJECTS)) {
+    const active = e.subject === code ? 'active' : '';
+    subjectList += `
+      <div class="subj-option ${active}" onclick="modalSetSubject('${code}')">
+        <span class="dot" style="background:${s.color}"></span>
+        <span class="subj-option-code" style="color:${s.color}">${code}</span>
+        <span class="subj-option-name">${s.name}</span>
+      </div>`;
+  }
+
+  const timerSect = isToday ? `
+    <hr class="modal-divider">
+    <div style="margin-bottom:0.5rem;font-size:0.8rem;color:var(--muted)">Timer</div>
+    <div class="timer-row">
+      ${timerHTML(ds, bid, e, true)}
+      ${!e.running
+        ? `<button class="btn btn-green btn-sm" onclick="modalStartTimer()">▶ Start</button>`
+        : `<button class="btn btn-red btn-sm"   onclick="modalStopTimer()">⏹ Stop</button>`}
+    </div>` : '';
+
+  const el = document.createElement('div');
+  el.className = 'overlay';
+  el.id = 'overlay';
+  el.onclick = (ev) => { if (ev.target === el) closeModal(); };
+  el.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">${blk?.label} · ${label}</div>
+      <div class="modal-sub">${blk?.time}</div>
+      <div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--muted)">Subject</div>
+      ${subjectList}
+      ${(()=>{
+        const subj = e.subject;
+        const s2 = SUBJECTS[subj] || {};
+        const mods = s2.modules || [];
+        const assigned = getModuleFor(ds, bid);
+        if (!mods.length) return '';
+        return `<div style="margin-top:0.75rem">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem">Modules</div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.35rem">
+            ${mods.map(m => {
+              const isAssigned = m === assigned;
+              return `<span style="background:${isAssigned ? s2.color+'35' : s2.color+'18'};color:${s2.color};border-radius:6px;padding:0.2rem 0.55rem;font-size:0.75rem;font-weight:${isAssigned?'700':'500'};${isAssigned?`outline:1px solid ${s2.color}55`:''}">${isAssigned ? '→ ' : ''}${m}</span>`;
+            }).join('')}
+          </div>
+        </div>`;
+      })()}
+      <hr class="modal-divider">
+      <label class="notes-label">Notes</label>
+      <textarea class="notes-area" id="modal-notes" placeholder="What did you work on?"
+        style="min-height:80px">${e.notes||''}</textarea>
+      ${timerSect}
+      <hr class="modal-divider">
+      <div style="display:flex;gap:0.5rem;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary btn-sm" onclick="modalSave()">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+function modalSetSubject(code) {
+  const { ds, bid } = modal;
+  doSetSubject(ds, bid, code);
+  renderModal(); // re-render to update active state
+}
+
+function modalStartTimer() {
+  const { ds, bid } = modal;
+  doStartTimer(ds, bid);
+  renderModal();
+}
+
+function modalStopTimer() {
+  const { ds, bid } = modal;
+  doStopTimer(ds, bid);
+  renderModal();
+}
+
+function modalSave() {
+  const { ds, bid } = modal;
+  const notes = document.getElementById('modal-notes')?.value || '';
+  doSaveNotes(ds, bid, notes);
+  closeModal();
+  render();
+}
+
+function closeModal() {
+  const el = document.getElementById('overlay');
+  if (el) el.remove();
+  modal = null;
+}
+
+// ════════════════════════════════════════════════════════════
+// GLOBAL ACTION HANDLERS (called from inline onclick)
+// ════════════════════════════════════════════════════════════
+function startTimer(ds, bid) { doStartTimer(ds, bid); }
+function stopTimer(ds, bid)  { doStopTimer(ds, bid);  }
+function saveNotes(ds, bid, text) { doSaveNotes(ds, bid, text); }
+
+function weekNav(dir) {
+  const d = parseDate(weekBase);
+  d.setDate(d.getDate() + dir * 7);
+  weekBase = fmtDate(d);
+  render();
+}
+
+function weekGoToday() {
+  weekBase = todayStr();
+  render();
+}
+
+function resetData() {
+  if (confirm('Reset ALL data? This clears all logged time and notes. Schedule will regenerate.')) {
+    localStorage.removeItem('studytracker_v8');
+    data = loadData();
+    render();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB SWITCHING & TOP-LEVEL RENDER
+// ════════════════════════════════════════════════════════════
+function switchTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['today','week','stats'][i] === t);
+  });
+  render();
+}
+
+function render() {
+  const main = document.getElementById('main');
+  if (tab === 'today') main.innerHTML = renderToday();
+  else if (tab === 'week') main.innerHTML = renderWeek();
+  else main.innerHTML = renderStats();
+  updatePill();
+}
+
+function updatePill() {
+  const pill = document.getElementById('exam-pill');
+  if (!pill) return;
+  const d = daysUntil(EXAM_START);
+  if (d > 0) {
+    pill.textContent  = `${d}d to exams`;
+    pill.className    = d <= 14 ? 'pill orange' : 'pill';
+  } else {
+    pill.textContent  = 'Exams!';
+    pill.className    = 'pill green';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// TIMER TICK (updates display without full re-render)
+// ════════════════════════════════════════════════════════════
+function tickTimers() {
+  // update any visible timer values
+  Object.entries(data.schedule).forEach(([ds, day]) => {
+    Object.entries(day).forEach(([bid, e]) => {
+      if (!e.running) return;
+      const el = document.getElementById(`tv-${ds}-${bid}`);
+      if (el) el.textContent = fmtMs(elapsedMs(e));
+    });
+  });
+  // also tick modal timer if open
+  if (modal) {
+    const e = getEntry(modal.ds, modal.bid);
+    if (e?.running) {
+      const el = document.getElementById(`tv-${modal.ds}-${modal.bid}`);
+      if (el) el.textContent = fmtMs(elapsedMs(e));
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+render();
+setInterval(tickTimers, 1000);
+</script>
+</body>
+</html>
