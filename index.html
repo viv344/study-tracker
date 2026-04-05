@@ -1031,6 +1031,20 @@ function render() {
   updatePill();
 }
 
+function getStreak() {
+  const sorted = Object.keys(data.schedule).sort().reverse();
+  const today  = todayStr();
+  let streak   = 0;
+  for (const ds of sorted) {
+    if (ds > today) continue;
+    const day = data.schedule[ds];
+    if (!day || day._rest) continue;
+    const hasTime = Object.values(day).some(e => e && elapsedMs(e) > 0);
+    if (!hasTime) break;
+    streak++;
+  }
+  return streak;
+}
 function updatePill() {
   const pill = document.getElementById('exam-pill');
   if (!pill) return;
